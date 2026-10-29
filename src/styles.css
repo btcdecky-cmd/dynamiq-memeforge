@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-paper: #f3efe6;
+  --color-ink: #1c1a16;
+  --color-card: #fffdf8;
+  --color-line: #e4dccf;
+  --color-mute: #6f6a60;
+  --color-stamp: #d63a2f;
+  --color-stamp-ink: #fff8f4;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    text-wrap: pretty;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .mf-input {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-line);
+    background: var(--color-card);
+    padding: 0.75rem 0.85rem;
+    color: var(--color-ink);
+    outline: none;
+  }
+  .mf-input:focus {
+    border-color: var(--color-ink);
+  }
+  .mf-btn {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-md);
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+  }
+  .mf-btn:disabled {
+    opacity: 0.5;
+  }
+  .mf-stamp {
+    background: var(--color-stamp);
+    color: var(--color-stamp-ink);
+  }
+  .mf-ink {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .mf-ghost {
+    border: 1px solid var(--color-line);
+    background: var(--color-card);
+    color: var(--color-ink);
+  }
+}

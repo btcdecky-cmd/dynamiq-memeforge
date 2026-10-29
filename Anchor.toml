@@ -1,0 +1,16 @@
+[toolchain]
+anchor_version = "0.31.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+memeforge_registry = "7GzvmTJXsQjbqbjgtFma9dFAxQUmhtAyfgy8mWsmxVEp"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "echo \"Deploy is manual. See README. The web app verifies SPL Memo on devnet today.\""

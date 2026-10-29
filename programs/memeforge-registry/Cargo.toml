@@ -1,0 +1,20 @@
+[package]
+name = "memeforge-registry"
+version = "0.1.0"
+edition = "2021"
+description = "DYNamiQ campaign registry. Not deployed. Devnet proof in the app uses SPL Memo until this program is published."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "memeforge_registry"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.31.1"

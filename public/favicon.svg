@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="DYNamiQ MemeForge">
+  <rect width="32" height="32" rx="7" fill="#F3EFE6"/>
+  <rect x="2.25" y="2.25" width="27.5" height="27.5" rx="5.5" fill="none" stroke="#1C1A16" stroke-width="2.25"/>
+  <path fill="#1C1A16" d="M7.2 23.2V8.8h3.15l5.65 8.55 5.65-8.55H25v14.4h-2.85v-8.7l-4.55 6.85h-2.2l-4.55-6.85v8.7H7.2z"/>
+  <circle cx="25.2" cy="24.6" r="4.35" fill="#D63A2F"/>
+  <circle cx="25.2" cy="24.6" r="2.15" fill="none" stroke="#F3EFE6" stroke-width="1.15"/>
+</svg>
