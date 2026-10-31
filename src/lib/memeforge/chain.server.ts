@@ -1,8 +1,9 @@
 import {
-  DEVNET_RPC,
+  CLUSTER_RPCS,
   MAINNET_RPCS,
   TOKEN_2022,
   TOKEN_PROGRAM,
+  type Cluster,
   decodeMintAccount,
   formatSupply,
   parseMemo,
@@ -193,37 +194,45 @@ export async function readSolanaBoosts(): Promise<{
   }
 }
 
-export async function verifyDevnetMemo(
+export async function verifyMemo(
   signature: string,
   expectedMemo: string,
   owner: string,
+  cluster: Cluster,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  let result: unknown;
-  try {
-    result = await rpc(DEVNET_RPC, "getTransaction", [
-      signature,
-      { encoding: "jsonParsed", commitment: "confirmed", maxSupportedTransactionVersion: 0 },
-    ]);
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "Devnet RPC failed",
-    };
+  const label = cluster === "mainnet" ? "mainnet" : "devnet";
+  let result: unknown = null;
+  let lastError = "";
+  for (const url of CLUSTER_RPCS[cluster]) {
+    try {
+      const found = await rpc(url, "getTransaction", [
+        signature,
+        { encoding: "jsonParsed", commitment: "confirmed", maxSupportedTransactionVersion: 0 },
+      ]);
+      if (found) {
+        result = found;
+        break;
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "RPC failed";
+    }
   }
   if (!result || typeof result !== "object") {
     return {
       ok: false,
-      error: "Signature was not found on devnet. Switch the wallet to Devnet and sign again.",
+      error: lastError
+        ? `Could not read that signature on ${label}. ${lastError}`
+        : `Signature was not found on ${label}. Switch the wallet to ${label} and sign again.`,
     };
   }
   const tx = result as {
     meta?: { err?: unknown; logMessages?: string[] };
     transaction?: { message?: { accountKeys?: unknown } };
   };
-  if (tx.meta?.err) return { ok: false, error: "The devnet transaction failed on-chain." };
+  if (tx.meta?.err) return { ok: false, error: `The ${label} transaction failed on-chain.` };
   const blob = JSON.stringify(result);
   if (!blob.includes(expectedMemo)) {
-    return { ok: false, error: "The devnet transaction does not contain this campaign memo." };
+    return { ok: false, error: `The ${label} transaction does not contain this campaign memo.` };
   }
   const parsed = parseMemo(expectedMemo);
   if (!parsed || parsed.owner !== owner) {
@@ -241,7 +250,7 @@ export async function verifyDevnetMemo(
     }
   }
   if (!signers.includes(owner) && !blob.includes(`"pubkey":"${owner}"`)) {
-    return { ok: false, error: "The prepared wallet did not sign this devnet transaction." };
+    return { ok: false, error: `The prepared wallet did not sign this ${label} transaction.` };
   }
   return { ok: true };
 }

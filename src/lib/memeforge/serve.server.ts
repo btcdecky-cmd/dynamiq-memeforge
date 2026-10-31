@@ -1,4 +1,4 @@
-import { isServable } from "./core";
+import { isServable, parseCluster } from "./core";
 import { db, rateLimit, sha256 } from "./db.server";
 
 export type ServedAd = {
@@ -12,6 +12,7 @@ export type ServedAd = {
   symbol: string | null;
   name: string | null;
   onchainVerified: boolean;
+  onchainCluster: "mainnet" | "devnet" | null;
   channels: string[];
 };
 
@@ -49,6 +50,7 @@ type Row = {
   symbol: string | null;
   token_name: string | null;
   onchain_verified_at: unknown;
+  onchain_cluster: string | null;
   channels: string;
   status: string;
   review_status: string | null;
@@ -67,7 +69,7 @@ export async function eligibleAds(slot: string | null): Promise<ServedAd[]> {
   const sql = await db();
   const rows = await sql<Row>`
     select c.id, c.headline, c.body, c.cta, c.destination_url, cr.image_data, c.mint,
-           t.symbol, t.name as token_name, c.onchain_verified_at, c.channels, c.status,
+           t.symbol, t.name as token_name, c.onchain_verified_at, c.onchain_cluster, c.channels, c.status,
            cr.review_status, c.starts_at, c.ends_at, c.targeting
     from campaigns c
     join creatives cr on cr.id = c.creative_id
@@ -108,6 +110,7 @@ export async function eligibleAds(slot: string | null): Promise<ServedAd[]> {
       symbol: row.symbol,
       name: row.token_name,
       onchainVerified: Boolean(row.onchain_verified_at),
+      onchainCluster: row.onchain_verified_at ? parseCluster(row.onchain_cluster) : null,
       channels: row.channels.split(",").filter(Boolean),
     });
     if (ads.length >= 6) break;
@@ -155,7 +158,7 @@ export async function handleProperty(request: Request): Promise<Response> {
     recorded: record,
     disclaimer:
       "Served only on this DYNamiQ property. These ads are not placed on every Solana marketplace.",
-    dataClass: "Off-chain registry. onchainVerified is a separate devnet memo check.",
+    dataClass: "Off-chain registry. onchainVerified is a separate mainnet or devnet memo check.",
     ads,
   });
 }
@@ -188,7 +191,7 @@ export async function handlePartnerAds(request: Request): Promise<Response> {
       recorded: record,
       disclaimer:
         "Eligible DYNamiQ campaigns for this approved partner only. Not a network-wide Solana placement.",
-      dataClass: "Off-chain registry. onchainVerified is a separate devnet memo check.",
+      dataClass: "Off-chain registry. onchainVerified is a separate mainnet or devnet memo check.",
       ads,
     },
     200,

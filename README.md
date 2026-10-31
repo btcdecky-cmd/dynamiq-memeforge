@@ -12,9 +12,9 @@ This version does **not** take payments, escrow funds, launch tokens, or swap. A
 | Price, liquidity, volume, name/symbol | DexScreener, only when a Solana pair exists. Missing means unknown, not zero |
 | Trend list | DexScreener token boosts, Solana rows only. Not social listening |
 | Impressions and clicks | Rows written when a slot loads or a click is recorded |
-| Campaign registry proof | SPL Memo transaction on **devnet**, verified by fetching the signature |
+| Campaign registry proof | SPL Memo transaction on **mainnet or devnet**, verified by fetching the signature on that cluster |
 
-The Anchor program in `programs/memeforge-registry` stores the advertiser, campaign id, mint, creative hash, and status. Media stays off-chain. The program id in `declare_id!` is a placeholder pubkey. It is **not** deployed, and the matching keypair is not in this repo. Replace it with `anchor keys sync` before any deploy. The live devnet proof is the SPL Memo flow below.
+The Anchor program in `programs/memeforge-registry` stores the advertiser, campaign id, mint, creative hash, and status. Media stays off-chain. The program id in `declare_id!` is a placeholder pubkey. It is **not** deployed, and the matching keypair is not in this repo. Replace it with `anchor keys sync` before any deploy. The live proof is the SPL Memo flow below, on the cluster the advertiser chose.
 
 ## Product flow
 
@@ -24,7 +24,7 @@ The Anchor program in `programs/memeforge-registry` stores the advertiser, campa
 4. Create a draft campaign. The mint must already have been read.
 5. Submit it. The operator marks it `live`, which approves the creative.
 6. Open Network and record a property impression, or activate a partner key and embed `widget.js`.
-7. Optionally connect a wallet on **devnet**, prepare the memo, sign, and verify. That badge is separate from ad eligibility.
+7. Optionally connect a wallet, choose **mainnet** or **devnet**, prepare the memo, sign, and verify. That badge is separate from ad eligibility. A mainnet memo spends a small SOL network fee. DYNamiQ does not collect it.
 
 ## Partner API
 
@@ -41,7 +41,7 @@ Property traffic (this site only) uses `/api/network/property` and does not acce
 <script src="https://YOUR_HOST/widget.js" data-key="dq_..." data-slot="banner" async></script>
 ```
 
-## Devnet memo
+## Memo registration
 
 Payload shape:
 
@@ -49,7 +49,7 @@ Payload shape:
 DYNAMIQ|v1|id=...|mint=...|creative=...|owner=...|state=...
 ```
 
-Program: `MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`. The wallet must be on devnet. Verification uses `https://api.devnet.solana.com`.
+Program: `MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`. The wallet must be on the same cluster you prepared. Verification reads mainnet via `https://api.mainnet-beta.solana.com` (fallback `https://solana-rpc.publicnode.com`) or devnet via `https://api.devnet.solana.com`. A signature from the other cluster does not verify.
 
 ## Deploying the Anchor program later
 

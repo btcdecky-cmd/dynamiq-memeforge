@@ -48,7 +48,9 @@ function Campaigns() {
               <span className="mt-1 block text-sm text-mute">{row.headline}</span>
               <span className="mt-1 block font-mono text-xs text-mute">
                 {row.symbol ? `$${row.symbol} · ` : ""}
-                {row.onchainVerified ? "devnet memo verified" : "no devnet memo yet"}
+                {row.onchainVerified
+                  ? `${row.onchainCluster ?? "unknown"} memo verified`
+                  : "no memo yet"}
               </span>
             </Link>
           </li>

@@ -67,8 +67,9 @@
       var fine = document.createElement("p");
       fine.style.cssText = "font-size:11px; color:#6f6a60; margin-top:8px;";
       fine.textContent = ad.onchainVerified
-        ? "Devnet memo verified. Delivery is still this partner slot, not every Solana site."
-        : "Off-chain creative. Not yet verified with a devnet memo.";
+        ? (ad.onchainCluster === "mainnet" ? "Mainnet" : "Devnet") +
+          " memo verified. Delivery is still this partner slot, not every Solana site."
+        : "Off-chain creative. Not yet verified with a mainnet or devnet memo.";
       host.appendChild(fine);
     })
     .catch(function () {

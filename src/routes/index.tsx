@@ -36,7 +36,7 @@ function Home() {
             <li>Mint supply, decimals, and authorities come from mainnet RPC. If the account is missing, we stop.</li>
             <li>Price and volume, when shown, are DexScreener. They are labeled off-chain.</li>
             <li>Impressions and clicks start at zero and only move when a slot actually loads or is clicked.</li>
-            <li>Devnet registration is a signed SPL Memo. It is not a claim that a custom program is already deployed.</li>
+            <li>Devnet or mainnet registration is a signed SPL Memo. Mainnet spends a small SOL network fee. It is not a claim that a custom program is already deployed.</li>
           </ul>
         </aside>
       </main>

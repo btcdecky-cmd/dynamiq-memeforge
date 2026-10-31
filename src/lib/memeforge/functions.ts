@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
-import { readMarket, readMint, readSolanaBoosts, verifyDevnetMemo } from "./chain.server";
+import { readMarket, readMint, readSolanaBoosts, verifyMemo } from "./chain.server";
 import {
   CHANNELS,
   buildMemo,
@@ -9,6 +9,7 @@ import {
   isMintAddress,
   newId,
   parseChannels,
+  parseCluster,
   randomKey,
   sha256Hex,
 } from "./core";
@@ -424,10 +425,11 @@ export const listCampaigns = createServerFn({ method: "GET" })
       status: string;
       headline: string;
       onchain_verified_at: unknown;
+      onchain_cluster: string | null;
       updated_at: unknown;
       symbol: string | null;
     }>`
-      select c.id, c.name, c.mint, c.status, c.headline, c.onchain_verified_at, c.updated_at, t.symbol
+      select c.id, c.name, c.mint, c.status, c.headline, c.onchain_verified_at, c.onchain_cluster, c.updated_at, t.symbol
       from campaigns c
       left join token_lookups t on t.mint = c.mint
       where c.user_id = ${context.userId}
@@ -440,6 +442,7 @@ export const listCampaigns = createServerFn({ method: "GET" })
       status: row.status,
       headline: row.headline,
       onchainVerified: Boolean(row.onchain_verified_at),
+      onchainCluster: parseCluster(row.onchain_cluster),
       updatedAt: iso(row.updated_at),
     }));
   });
@@ -508,7 +511,7 @@ export const getCampaign = createServerFn({ method: "POST" })
         reviewStatus: row.review_status,
         startsAt: iso(row.starts_at),
         endsAt: iso(row.ends_at),
-        onchainCluster: row.onchain_cluster,
+        onchainCluster: parseCluster(row.onchain_cluster),
         onchainMemo: row.onchain_memo,
         onchainSignature: row.onchain_signature,
         onchainVerifiedAt: iso(row.onchain_verified_at),
@@ -567,11 +570,13 @@ export const setCampaignStatus = createServerFn({ method: "POST" })
 
 export const prepareChain = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator((input: { id: string; owner: string }) => ({
+  .validator((input: { id: string; owner: string; cluster?: string }) => ({
     id: String(input?.id ?? ""),
     owner: String(input?.owner ?? "").trim(),
+    cluster: parseCluster(input?.cluster),
   }))
-  .handler(async ({ context, data }): Promise<Ok<{ memo: string; cluster: "devnet" }> | Fail> => {
+  .handler(async ({ context, data }): Promise<Ok<{ memo: string; cluster: "mainnet" | "devnet" }> | Fail> => {
+    if (!data.cluster) return fail("Choose mainnet or devnet.");
     if (!isMintAddress(data.owner)) return fail("Connect a Solana wallet public key first.");
     const sql = await db();
     const rows = await sql<{ mint: string; creative_id: string | null; status: string; headline: string }>`
@@ -589,12 +594,12 @@ export const prepareChain = createServerFn({ method: "POST" })
     });
     await sql`
       update campaigns
-      set onchain_memo = ${memo}, onchain_cluster = 'devnet', onchain_signature = null,
+      set onchain_memo = ${memo}, onchain_cluster = ${data.cluster}, onchain_signature = null,
           onchain_verified_at = null, updated_at = now()
       where id = ${data.id} and user_id = ${context.userId}`;
     await sql`update profiles set wallet_pubkey = ${data.owner} where user_id = ${context.userId}`;
-    await logActivity(sql, context.userId, "chain.prepare", data.id, "devnet");
-    return { ok: true, memo, cluster: "devnet" };
+    await logActivity(sql, context.userId, "chain.prepare", data.id, data.cluster);
+    return { ok: true, memo, cluster: data.cluster };
   });
 
 export const confirmChain = createServerFn({ method: "POST" })
@@ -607,12 +612,13 @@ export const confirmChain = createServerFn({ method: "POST" })
     if (!/^[1-9A-HJ-NP-Za-km-z]{64,100}$/.test(data.signature)) return fail("That does not look like a Solana signature.");
     const { sql, allowed } = await gate(context.userId, "chain", 20, 60 * 60_000);
     if (!allowed) return fail("Too many verification attempts.");
-    const rows = await sql<{ onchain_memo: string | null }>`
-      select onchain_memo from campaigns where id = ${data.id} and user_id = ${context.userId}`;
+    const rows = await sql<{ onchain_memo: string | null; onchain_cluster: string | null }>`
+      select onchain_memo, onchain_cluster from campaigns where id = ${data.id} and user_id = ${context.userId}`;
     const memo = rows[0]?.onchain_memo;
-    if (!memo) return fail("Prepare the devnet memo before verifying.");
+    const cluster = parseCluster(rows[0]?.onchain_cluster);
+    if (!memo || !cluster) return fail("Prepare the memo on mainnet or devnet before verifying.");
     const owner = memo.split("|").find((part) => part.startsWith("owner="))?.slice(6) ?? "";
-    const check = await verifyDevnetMemo(data.signature, memo, owner);
+    const check = await verifyMemo(data.signature, memo, owner, cluster);
     if (!check.ok) return check;
     await sql`
       update campaigns

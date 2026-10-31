@@ -11,6 +11,22 @@ export const MAINNET_RPCS = [
   "https://solana-rpc.publicnode.com",
 ];
 
+export type Cluster = "mainnet" | "devnet";
+
+export const CLUSTER_RPCS: Record<Cluster, readonly string[]> = {
+  mainnet: MAINNET_RPCS,
+  devnet: [DEVNET_RPC],
+};
+
+export function parseCluster(value: string | null | undefined): Cluster | null {
+  return value === "mainnet" || value === "devnet" ? value : null;
+}
+
+export function explorerTxUrl(cluster: Cluster, signature: string): string {
+  const base = `https://explorer.solana.com/tx/${encodeURIComponent(signature)}`;
+  return cluster === "devnet" ? `${base}?cluster=devnet` : base;
+}
+
 export const LIMITS = {
   name: 80,
   headline: 90,

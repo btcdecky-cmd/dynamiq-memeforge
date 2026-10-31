@@ -11,7 +11,7 @@ function Login() {
         <Wordmark />
         <h1 className="text-3xl font-bold">Sign in</h1>
         <p className="text-sm text-mute">
-          Google or X. Your wallet is connected later, only to sign a devnet memo. There is no payment step.
+          Google or X. Your wallet is connected later, only to sign a mainnet or devnet memo. DYNamiQ does not take a payment. Mainnet still charges a small network fee.
         </p>
         {authEnabled ? (
           GROK_PROVIDERS.map((provider) => (

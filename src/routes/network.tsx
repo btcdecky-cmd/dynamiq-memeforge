@@ -13,6 +13,7 @@ type Ad = {
   cta: string;
   image: string | null;
   onchainVerified: boolean;
+  onchainCluster: "mainnet" | "devnet" | null;
   symbol: string | null;
 };
 
@@ -80,7 +81,10 @@ function NetworkPage() {
               </a>
               <p className="mt-3 text-xs text-mute">
                 {ad.symbol ? `$${ad.symbol}. ` : ""}
-                {ad.onchainVerified ? "Devnet memo verified." : "No devnet memo yet."} Counts are off-chain.
+                {ad.onchainVerified
+                  ? `${ad.onchainCluster === "mainnet" ? "Mainnet" : "Devnet"} memo verified.`
+                  : "No memo verified yet."}{" "}
+                Counts are off-chain.
               </p>
             </article>
           ) : null}
